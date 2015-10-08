@@ -18,13 +18,14 @@ var (
 	hrefAsset = map[string]Add{
 		"href": addAsset,
 	}
+	hrefLink = map[string]Add{
+		"href": addLink,
+	}
 	mappings = map[atom.Atom]map[string]Add{
 		atom.Img:    srcAsset,
 		atom.Script: srcAsset,
 		atom.Link:   hrefAsset,
-		atom.A: map[string]Add{
-			"href": addLink,
-		},
+		atom.A:      hrefLink,
 	}
 )
 
