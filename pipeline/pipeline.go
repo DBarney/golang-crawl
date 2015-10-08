@@ -11,7 +11,7 @@ type (
 	}
 	Handler  func(interface{}) (interface{}, error)
 	pipeline struct {
-		source chan interface{}
+		source <-chan interface{}
 		dest   chan interface{}
 		err    chan error
 		handle Handler
@@ -19,7 +19,7 @@ type (
 	}
 )
 
-func NewPipeline(source chan interface{}, handle Handler) Pipeline {
+func NewPipeline(source <-chan interface{}, handle Handler) Pipeline {
 	pipe := &pipeline{
 		source: source,
 		dest:   make(chan interface{}),
@@ -27,8 +27,9 @@ func NewPipeline(source chan interface{}, handle Handler) Pipeline {
 		handle: handle,
 		group:  sync.WaitGroup{},
 	}
-	pipe.group.Add(10)
-	for i := 0; i < 10; i++ {
+
+	for i := 0; i < 1; i++ {
+		pipe.group.Add(1)
 		go pipe.work()
 	}
 	go pipe.waitForGroup()
