@@ -35,4 +35,8 @@ There are a few different config options available that can be used to change ho
 
 
 ## notes
-I need to have a site map generated with links to other pages and static resources that are loaded.
+- I need to have a site map generated with links to other pages and static resources that are loaded.
+
+## TODO
+- be able to scan css for links to static resources as well
+- actually match the parameters in this README.md
