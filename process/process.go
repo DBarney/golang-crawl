@@ -11,5 +11,6 @@ type (
 		Assets []string
 		Root   *html.Node
 		Res    *http.Response
+		Url    string
 	}
 )

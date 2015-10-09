@@ -3,6 +3,7 @@ package main
 import (
 	// "flag"
 	"fmt"
+	"github.com/DBarney/golang-crawl/output"
 	"github.com/DBarney/golang-crawl/pipeline"
 	"github.com/DBarney/golang-crawl/process"
 	"os"
@@ -21,9 +22,13 @@ func main() {
 	// flag.Parse()
 	fmt.Println("starting up crawler")
 
+	results := output.NewStorage()
+
 	urlFetcher := pipeline.NewPipeline(source, process.FetchUrl)
 	xmlParser := pipeline.NewPipeline(urlFetcher.Output(), process.ParseXML)
 	documentCompiler := pipeline.NewPipeline(xmlParser.Output(), process.CompileNodeInfo)
+	storage := pipeline.NewPipeline(documentCompiler.Output(), results.AddPage)
+	links := pipeline.NewPipeline(storage.Output(), storage.FilterLinks("what.org"))
 
 	pending := 0
 	for _, arg := range os.Args[1:] {
@@ -31,20 +36,24 @@ func main() {
 		source <- arg
 	}
 
+	// catch errors from all points in the pipeline
 	for pending > 0 {
 		select {
 		case err := <-urlFetcher.Err():
 			panic(err)
 		case err := <-xmlParser.Err():
 			panic(err)
+		case err := <-storage.Err():
+			panic(err)
 		case err := <-documentCompiler.Err():
 			panic(err)
-		case out := <-documentCompiler.Output():
-			page := out.(*process.Page)
-			for _, link := range page.Links {
+		case out := <-links.Output():
+			newLinks := out.([]string)
+			for _, link := range newLinks {
 				fmt.Printf("also need to get %v\n", link)
 			}
 		}
 		pending--
 	}
+	results.Dump("tree")
 }
