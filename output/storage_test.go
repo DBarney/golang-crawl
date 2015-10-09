@@ -5,8 +5,12 @@ import (
 	"testing"
 )
 
+var (
+	store = &storage{}
+)
+
 func TestDropFilter(t *testing.T) {
-	filter := FilterLinks("me.com")
+	filter := store.FilterLinks("me.com")
 
 	drop := &process.Page{
 		Links: []string{
@@ -34,7 +38,7 @@ func TestDropFilter(t *testing.T) {
 }
 
 func TestKeepFilter(t *testing.T) {
-	filter := FilterLinks("me.com")
+	filter := store.FilterLinks("me.com")
 	keep := &process.Page{
 		Links: []string{
 			"me.com/index.html",
