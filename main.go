@@ -28,7 +28,7 @@ func main() {
 	xmlParser := pipeline.NewPipeline(urlFetcher.Output(), process.ParseXML)
 	documentCompiler := pipeline.NewPipeline(xmlParser.Output(), process.CompileNodeInfo)
 	storage := pipeline.NewPipeline(documentCompiler.Output(), results.AddPage)
-	links := pipeline.NewPipeline(storage.Output(), storage.FilterLinks("what.org"))
+	links := pipeline.NewPipeline(storage.Output(), results.FilterLinks("what.org"))
 
 	pending := 0
 	for _, arg := range os.Args[1:] {

@@ -1,5 +1,5 @@
 # golang-crawl
-
+![Build Status Image](https://travis-ci.org/DBarney/golang-crawl.svg)
 This mainly was written as a toy to visualize a website.
 
 Glang-Scrape is a small web crawlr that uses goroutines to fetch webpages in parallel. The results of the crawl can be displayed in a few different formats.
