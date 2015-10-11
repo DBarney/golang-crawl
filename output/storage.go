@@ -16,10 +16,12 @@ type (
 var (
 	// these don't describe completely what a valid link looks like,
 	// but used in order they can narrow down what a link is
-	complete       = regexp.MustCompile("^https?://[^/]+/")
-	missing_schema = regexp.MustCompile("^//[^/]+/")
-	absolute       = regexp.MustCompile("^/")
-	relative       = regexp.MustCompile("^[^/]")
+	complete         = regexp.MustCompile("^https?://[^/]+/")
+	completeHostOnly = regexp.MustCompile("^https?://[^/]+")
+	missingSchema    = regexp.MustCompile("^//[^/]+/")
+	hostOnly         = regexp.MustCompile("^//[^/]+")
+	absolute         = regexp.MustCompile("^/")
+	relative         = regexp.MustCompile("^[^/]")
 )
 
 func NewStorage() *storage {
@@ -68,8 +70,14 @@ func matchUrl(link string, url *url.URL) (string, bool) {
 	switch {
 	case complete.Match(bytes):
 		return link, sameSite(link, url)
-	case missing_schema.Match(bytes):
+	case completeHostOnly.Match(bytes):
+		full := link + "/"
+		return full, sameSite(full, url)
+	case missingSchema.Match(bytes):
 		full := "http:" + link
+		return full, sameSite(full, url)
+	case hostOnly.Match(bytes):
+		full := "http:" + link + "/"
 		return full, sameSite(full, url)
 	case absolute.Match(bytes):
 		return "http://" + url.Host + link, true

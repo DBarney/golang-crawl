@@ -51,6 +51,7 @@ func TestKeepFilter(t *testing.T) {
 			"http://me.com/",
 			"https://me.com/",
 			"//me.com/",
+			"//me.com",
 			"/index.html",
 			"/",
 			"about.com",
@@ -74,6 +75,7 @@ func TestKeepFilter(t *testing.T) {
 	expandedLinks := []string{
 		"http://me.com/",
 		"https://me.com/",
+		"http://me.com/",
 		"http://me.com/",
 		"http://me.com/index.html",
 		"http://me.com/",
