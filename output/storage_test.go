@@ -2,6 +2,7 @@ package output
 
 import (
 	"github.com/DBarney/golang-crawl/process"
+	"net/url"
 	"testing"
 )
 
@@ -11,18 +12,19 @@ var (
 
 func TestDropFilter(t *testing.T) {
 	filter := store.FilterLinks("me.com")
-
+	url, err := url.Parse("http://me.com/current")
+	if err != nil {
+		t.Log(err)
+		t.FailNow()
+	}
 	drop := &process.Page{
 		Links: []string{
 			// different domain
-			"what.com",
-			"//what.com",
 			"//what.com/",
-			"http://what.com",
 			"http://what.com/",
-			"https://what.com",
 			"https://what.com/",
 		},
+		Url: url,
 	}
 
 	result, err := filter(drop)
@@ -39,9 +41,13 @@ func TestDropFilter(t *testing.T) {
 
 func TestKeepFilter(t *testing.T) {
 	filter := store.FilterLinks("me.com")
+	url, err := url.Parse("http://me.com/current")
+	if err != nil {
+		t.Log(err)
+		t.FailNow()
+	}
 	keep := &process.Page{
 		Links: []string{
-			"me.com/index.html",
 			"http://me.com/",
 			"https://me.com/",
 			"//me.com/",
@@ -49,7 +55,7 @@ func TestKeepFilter(t *testing.T) {
 			"/",
 			"about.com",
 		},
-		Url: "http://me.com/current",
+		Url: url,
 	}
 
 	result, err := filter(keep)
@@ -66,7 +72,6 @@ func TestKeepFilter(t *testing.T) {
 
 	// I also need to verify that the urls are expanded correctly
 	expandedLinks := []string{
-		"http://me.com/index.html",
 		"http://me.com/",
 		"https://me.com/",
 		"http://me.com/",

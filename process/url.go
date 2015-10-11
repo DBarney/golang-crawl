@@ -2,11 +2,16 @@ package process
 
 import (
 	"net/http"
+	"net/url"
 )
 
 func FetchUrl(job interface{}) (interface{}, error) {
-	url := job.(string)
-	res, err := http.Get(url)
+	stringUrl := job.(string)
+	url, err := url.Parse(stringUrl)
+	if err != nil {
+		return nil, err
+	}
+	res, err := http.Get(stringUrl)
 	if err != nil {
 		return nil, err
 	}

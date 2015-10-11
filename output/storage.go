@@ -3,12 +3,23 @@ package output
 import (
 	"fmt"
 	"github.com/DBarney/golang-crawl/process"
+	"net/url"
+	"regexp"
 )
 
 type (
 	storage struct {
 		store map[string]*process.Page
 	}
+)
+
+var (
+	// these don't describe completely what a valid link looks like,
+	// but used in order they can narrow down what a link is
+	complete       = regexp.MustCompile("^https?://[^/]+/")
+	missing_schema = regexp.MustCompile("^//[^/]+/")
+	absolute       = regexp.MustCompile("^/")
+	relative       = regexp.MustCompile("^[^/]")
 )
 
 func NewStorage() *storage {
@@ -19,9 +30,10 @@ func NewStorage() *storage {
 }
 func (store *storage) AddPage(job interface{}) (interface{}, error) {
 	page := job.(*process.Page)
-	_, visited := store.store[page.Url]
+	key := page.Url.String()
+	_, visited := store.store[key]
 	if !visited {
-		store.store[page.Url] = page
+		store.store[key] = page
 	}
 
 	return page, nil
@@ -29,9 +41,42 @@ func (store *storage) AddPage(job interface{}) (interface{}, error) {
 
 func (store *storage) FilterLinks(pattern string) func(interface{}) (interface{}, error) {
 	return func(job interface{}) (interface{}, error) {
-		// I need to filter out all links not matching the pattern, also I need to fix
-		// up any urls that aren't complete so that they can be requested correctly (relative etc.)
-		return []string{}, nil
+		page := job.(*process.Page)
+		links := make([]string, 0)
+		for _, link := range page.Links {
+			if newLink, sameSite := matchUrl(link, page.Url); sameSite {
+				links = append(links, newLink)
+			}
+		}
+		return links, nil
+	}
+}
+
+func sameSite(link string, url *url.URL) bool {
+	testUrl, err := url.Parse(link)
+	switch {
+	case err != nil:
+		return false
+	default:
+		return testUrl.Host == url.Host
+	}
+}
+
+func matchUrl(link string, url *url.URL) (string, bool) {
+	// url.Parse doesn't really work here, so I need to regex my way to victory
+	bytes := []byte(link)
+	switch {
+	case complete.Match(bytes):
+		return link, sameSite(link, url)
+	case missing_schema.Match(bytes):
+		full := "http:" + link
+		return full, sameSite(full, url)
+	case absolute.Match(bytes):
+		return "http://" + url.Host + link, true
+	case relative.Match(bytes):
+		return url.String() + "/" + link, true
+	default:
+		return "", false
 	}
 }
 

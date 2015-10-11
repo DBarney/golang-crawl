@@ -3,6 +3,7 @@ package process
 import (
 	"golang.org/x/net/html"
 	"net/http"
+	"net/url"
 )
 
 type (
@@ -11,6 +12,6 @@ type (
 		Assets []string
 		Root   *html.Node
 		Res    *http.Response
-		Url    string
+		Url    *url.URL
 	}
 )
