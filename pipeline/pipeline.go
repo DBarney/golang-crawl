@@ -19,7 +19,16 @@ type (
 	}
 )
 
-func NewPipeline(source <-chan interface{}, handle Handler) Pipeline {
+func NewPipeline(source <-chan interface{}, workerCount int, handles ...Handler) Pipeline {
+	var pipe Pipeline
+	for _, handle := range handles {
+		pipe = newPipeline(source, workerCount, handle)
+		source = pipe.Output()
+	}
+	return pipe
+}
+
+func newPipeline(source <-chan interface{}, workerCount int, handle Handler) Pipeline {
 	pipe := &pipeline{
 		source: source,
 		dest:   make(chan interface{}),

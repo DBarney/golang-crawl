@@ -7,6 +7,7 @@ import (
 	"github.com/DBarney/golang-crawl/pipeline"
 	"github.com/DBarney/golang-crawl/process"
 	"os"
+	"os/signal"
 )
 
 func init() {
@@ -24,12 +25,15 @@ func main() {
 
 	results := output.NewStorage()
 
-	unique := pipeline.NewPipeline(source, results.IsUnique)
-	urlFetcher := pipeline.NewPipeline(unique.Output(), process.FetchUrl)
-	xmlParser := pipeline.NewPipeline(urlFetcher.Output(), process.ParseXML)
-	documentCompiler := pipeline.NewPipeline(xmlParser.Output(), process.CompileNodeInfo)
-	storage := pipeline.NewPipeline(documentCompiler.Output(), results.AddPage)
-	links := pipeline.NewPipeline(storage.Output(), results.FilterLinks())
+	steps := []pipeline.Handler{
+		process.FetchUrl,
+		process.ParseXML,
+		process.CompileNodeInfo,
+		results.AddPage,
+		process.FilterLinks,
+	}
+	unique := pipeline.NewPipeline(source, 1, results.IsUnique)
+	rest := pipeline.NewPipeline(unique.Output(), 4, steps...)
 
 	pending := 0
 	for _, arg := range os.Args[1:] {
@@ -37,32 +41,38 @@ func main() {
 		source <- arg
 	}
 
+	halt := make(chan os.Signal, 0)
+	finish := make(chan interface{}, 0)
+	signal.Notify(halt, os.Interrupt)
 	// catch errors from all points in the pipeline
 	for pending > 0 {
 		select {
 		case <-unique.Err():
 			//nothing, as we already have this one
-		case err := <-urlFetcher.Err():
+		case err := <-rest.Err():
 			panic(err)
-		case err := <-xmlParser.Err():
-			panic(err)
-		case err := <-documentCompiler.Err():
-			panic(err)
-		case err := <-storage.Err():
-			panic(err)
-		case err := <-links.Err():
-			panic(err)
-		case out := <-links.Output():
+		case <-halt:
+			fmt.Println("waiting for current jobs to finish...")
+			close(finish)
+		case out, open := <-rest.Output():
+			if !open {
+				break
+			}
 			newLinks := out.([]string)
 			// we don't want to block the pipeline so we do this in a goroutine
 			go func() {
 				for _, link := range newLinks {
-					source <- link
+					select {
+					case <-finish:
+						pending--
+					case source <- link:
+					}
 				}
 			}()
 			pending += len(newLinks)
 		}
 		pending--
 	}
+	close(source)
 	results.Dump("tree")
 }

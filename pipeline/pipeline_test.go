@@ -17,7 +17,7 @@ func TestSinglePipeline(t *testing.T) {
 			return in, nil
 		}
 	}
-	pipe := NewPipeline(source, handle)
+	pipe := NewPipeline(source, 1, handle)
 	for i := 0; i < 10; i++ {
 		source <- string(i)
 		select {
