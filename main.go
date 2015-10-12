@@ -24,11 +24,12 @@ func main() {
 
 	results := output.NewStorage()
 
-	urlFetcher := pipeline.NewPipeline(source, process.FetchUrl)
+	unique := pipeline.NewPipeline(source, results.IsUnique)
+	urlFetcher := pipeline.NewPipeline(unique.Output(), process.FetchUrl)
 	xmlParser := pipeline.NewPipeline(urlFetcher.Output(), process.ParseXML)
 	documentCompiler := pipeline.NewPipeline(xmlParser.Output(), process.CompileNodeInfo)
 	storage := pipeline.NewPipeline(documentCompiler.Output(), results.AddPage)
-	links := pipeline.NewPipeline(storage.Output(), results.FilterLinks("what.org"))
+	links := pipeline.NewPipeline(storage.Output(), results.FilterLinks())
 
 	pending := 0
 	for _, arg := range os.Args[1:] {
@@ -39,19 +40,27 @@ func main() {
 	// catch errors from all points in the pipeline
 	for pending > 0 {
 		select {
+		case <-unique.Err():
+			//nothing, as we already have this one
 		case err := <-urlFetcher.Err():
 			panic(err)
 		case err := <-xmlParser.Err():
 			panic(err)
+		case err := <-documentCompiler.Err():
+			panic(err)
 		case err := <-storage.Err():
 			panic(err)
-		case err := <-documentCompiler.Err():
+		case err := <-links.Err():
 			panic(err)
 		case out := <-links.Output():
 			newLinks := out.([]string)
-			for _, link := range newLinks {
-				fmt.Printf("also need to get %v\n", link)
-			}
+			// we don't want to block the pipeline so we do this in a goroutine
+			go func() {
+				for _, link := range newLinks {
+					source <- link
+				}
+			}()
+			pending += len(newLinks)
 		}
 		pending--
 	}

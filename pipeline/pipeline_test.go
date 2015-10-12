@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestPipeline(t *testing.T) {
+func TestSinglePipeline(t *testing.T) {
 	count := 0
 	source := make(chan interface{}, 1)
 	handle := func(in interface{}) (interface{}, error) {

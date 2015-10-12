@@ -1,6 +1,7 @@
 package output
 
 import (
+	"errors"
 	"fmt"
 	"github.com/DBarney/golang-crawl/process"
 	"net/url"
@@ -14,6 +15,8 @@ type (
 )
 
 var (
+	Exists = errors.New("url has been visitred already")
+
 	// these don't describe completely what a valid link looks like,
 	// but used in order they can narrow down what a link is
 	complete         = regexp.MustCompile("^https?://[^/]+/")
@@ -32,16 +35,23 @@ func NewStorage() *storage {
 }
 func (store *storage) AddPage(job interface{}) (interface{}, error) {
 	page := job.(*process.Page)
-	key := page.Url.String()
-	_, visited := store.store[key]
-	if !visited {
-		store.store[key] = page
-	}
-
+	store.store[page.Url.String()] = page
 	return page, nil
 }
 
-func (store *storage) FilterLinks(pattern string) func(interface{}) (interface{}, error) {
+func (store *storage) IsUnique(job interface{}) (interface{}, error) {
+	url := job.(string)
+	_, exists := store.store[url]
+	if exists {
+		return nil, Exists
+	}
+	// just a place holder
+	store.store[url] = &process.Page{}
+	fmt.Println("fetching", url)
+	return job, nil
+}
+
+func (store *storage) FilterLinks() func(interface{}) (interface{}, error) {
 	return func(job interface{}) (interface{}, error) {
 		page := job.(*process.Page)
 		links := make([]string, 0)
