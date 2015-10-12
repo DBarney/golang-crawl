@@ -11,7 +11,7 @@ var (
 )
 
 func TestDropFilter(t *testing.T) {
-	filter := store.FilterLinks("me.com")
+	filter := store.FilterLinks()
 	url, err := url.Parse("http://me.com/current")
 	if err != nil {
 		t.Log(err)
@@ -40,7 +40,7 @@ func TestDropFilter(t *testing.T) {
 }
 
 func TestKeepFilter(t *testing.T) {
-	filter := store.FilterLinks("me.com")
+	filter := store.FilterLinks()
 	url, err := url.Parse("http://me.com/current")
 	if err != nil {
 		t.Log(err)
