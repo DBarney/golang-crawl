@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/DBarney/golang-crawl/process"
+	"net/url"
 )
 
 type (
@@ -29,15 +30,21 @@ func (store *storage) AddPage(job interface{}) (interface{}, error) {
 }
 
 func (store *storage) IsUnique(job interface{}) (interface{}, error) {
-	url := job.(string)
-	_, exists := store.store[url]
+	baseUrl := job.(string)
+	_, exists := store.store[baseUrl]
 	if exists {
 		return nil, Exists
 	}
-	// just a place holder
-	store.store[url] = &process.Page{}
-	fmt.Println("fetching", url)
-	return job, nil
+	fmt.Println("fetching", baseUrl)
+	URL, err := url.Parse(baseUrl)
+	if err != nil {
+		return nil, err
+	}
+	page := &process.Page{
+		Url: URL,
+	}
+	store.store[baseUrl] = page
+	return page, nil
 }
 
 func (store *storage) Dump(method string) {

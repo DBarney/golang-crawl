@@ -37,7 +37,7 @@ func addLink(page *Page, asset string) {
 	page.Links = append(page.Links, asset)
 }
 
-func ParseXML(job interface{}) (interface{}, error) {
+func ParseHTML(job interface{}) (interface{}, error) {
 	page := job.(*Page)
 	root, err := html.Parse(page.Res.Body)
 	if err != nil {

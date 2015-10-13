@@ -21,23 +21,24 @@ type (
 
 func NewPipeline(source <-chan interface{}, workerCount int, handles ...Handler) Pipeline {
 	var pipe Pipeline
+	err := make(chan error)
 	for _, handle := range handles {
-		pipe = newPipeline(source, workerCount, handle)
+		pipe = newPipeline(source, err, workerCount, handle)
 		source = pipe.Output()
 	}
 	return pipe
 }
 
-func newPipeline(source <-chan interface{}, workerCount int, handle Handler) Pipeline {
+func newPipeline(source <-chan interface{}, err chan error, workerCount int, handle Handler) Pipeline {
 	pipe := &pipeline{
 		source: source,
 		dest:   make(chan interface{}),
-		err:    make(chan error),
+		err:    err,
 		handle: handle,
 		group:  sync.WaitGroup{},
 	}
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < workerCount; i++ {
 		pipe.group.Add(1)
 		go pipe.work()
 	}
