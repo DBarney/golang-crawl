@@ -47,6 +47,7 @@ func ParseHTML(job interface{}) (interface{}, error) {
 	page.Root = root
 	page.Links = make([]string, 0)
 	page.Assets = make([]string, 0)
+	page.SameDomainLinks = make([]string, 0)
 
 	return page, nil
 }

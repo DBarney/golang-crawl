@@ -6,9 +6,9 @@ import (
 	"github.com/DBarney/golang-crawl/output"
 	"github.com/DBarney/golang-crawl/pipeline"
 	"github.com/DBarney/golang-crawl/process"
+	"net/url"
 	"os"
 	"os/signal"
-	"regexp"
 )
 
 func init() {
@@ -22,7 +22,7 @@ func main() {
 	source := make(chan interface{}, 0)
 
 	// flag.Parse()
-	fmt.Println("starting up crawler")
+	fmt.Fprintln(os.Stderr, "starting up crawler")
 
 	results := output.NewStorage()
 
@@ -34,20 +34,24 @@ func main() {
 		process.FilterLinks,
 	}
 
-	unique := pipeline.NewPipeline(source, 1, results.IsUnique)
+	unique := pipeline.NewPipeline(source, 1, results.IsUnique, process.MaxDepth(5))
 	rest := pipeline.NewPipeline(unique.Output(), 4, steps...)
 
 	pending := 0
-	// this needs to be more robust.
-	isDns := regexp.MustCompile("[\\w][\\d.\\w].+[\\w]")
 	for _, arg := range os.Args[1:] {
-
-		if isDns.Match([]byte(arg)) {
+		URL, err := url.Parse(arg)
+		if err == nil && (URL.Scheme == "http" || URL.Scheme == "https") {
 			pending++
-			source <- "http://" + arg + "/"
-			// we only want one
+			if URL.Path == "" {
+				URL.Path = "/"
+			}
+			source <- URL.String()
 			break
 		}
+	}
+	if pending == 0 {
+		fmt.Fprintln(os.Stderr, "a valid http url was not provided")
+		return
 	}
 
 	halt := make(chan os.Signal, 0)
@@ -55,7 +59,7 @@ func main() {
 	finish := make(chan interface{}, 0)
 	go func() {
 		<-halt
-		fmt.Println("waiting for current jobs to finish...")
+		fmt.Fprintln(os.Stderr, "waiting for current jobs to finish...")
 		close(finish)
 	}()
 
@@ -64,8 +68,9 @@ func main() {
 		case <-unique.Err():
 			// if we already have visited the link, we don't care about the error
 		case err := <-rest.Err():
-			// other errors cause the program to panic, these could be closed connections etc.
-			panic(err)
+			// other errors cause the program to exit, these could be closed connections etc.
+			fmt.Fprintln(os.Stderr, "unable to continue: ", err)
+			return
 		case out, open := <-rest.Output():
 			if !open {
 				break
@@ -86,5 +91,8 @@ func main() {
 		pending--
 	}
 	close(source)
-	results.Dump("tree")
+	err := results.Dump("dot", os.Stdout)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Unable to write:", err)
+	}
 }

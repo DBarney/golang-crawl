@@ -8,10 +8,13 @@ import (
 
 type (
 	Page struct {
-		Links  []string
-		Assets []string
-		Root   *html.Node
-		Res    *http.Response
-		Url    *url.URL
+		Depth           int
+		Links           []string
+		SameDomainLinks []string
+		Assets          []string
+		Root            *html.Node
+		Res             *http.Response
+		Url             *url.URL
+		Id              int
 	}
 )

@@ -20,13 +20,15 @@ var (
 
 func FilterLinks(job interface{}) (interface{}, error) {
 	page := job.(*Page)
-	links := make([]string, 0)
-	for _, link := range page.Links {
+	for idx, link := range page.Links {
 		if newLink, sameSite := expandUrl(link, page.Url); sameSite {
-			links = append(links, newLink)
+			page.SameDomainLinks = append(page.SameDomainLinks, newLink)
+			// we change the original list of links so that all path cleaning will be reflected
+			// but only for urls that are part of this site
+			page.Links[idx] = newLink
 		}
 	}
-	return links, nil
+	return page.SameDomainLinks, nil
 }
 
 func sameSite(first *url.URL, second *url.URL) bool {
