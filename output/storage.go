@@ -34,11 +34,6 @@ func NewStorage() *storage {
 	}
 	return store
 }
-func (store *storage) AddPage(job interface{}) (interface{}, error) {
-	page := job.(*process.Page)
-	store.store[page.Url.String()] = page
-	return page, nil
-}
 
 func (store *storage) IsUnique(job interface{}) (interface{}, error) {
 	baseUrl := job.(string)

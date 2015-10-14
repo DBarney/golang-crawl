@@ -4,6 +4,8 @@ This mainly was written as a toy to visualize a website.
 
 Glang-Scrape is a small web crawlr that uses goroutines to fetch webpages in parallel. The results of the crawl can be displayed in a few different formats.
 
+## note: these are still in flux
+
 tree like format
 ```
 golang-crawl test.com -pattern=test.com -depth=10 -results=tree
@@ -27,6 +29,8 @@ type ^c to exit
 
 There are a few different config options available that can be used to change how golang-crawl works.
 
+## note: these are not yet implemented
+
 | Parameter Name | Description | Default |
 | --- | --- | --- |
 | pattern | Only crawl from hosts matching the specified regex pattern | The url passed as the first parameter|
@@ -34,9 +38,7 @@ There are a few different config options available that can be used to change ho
 | results | Change how results are displayed | tree |
 
 
-## notes
-- I need to have a site map generated with links to other pages and static resources that are loaded.
-
 ## TODO
 - be able to scan css for links to static resources as well
 - actually match the parameters in this README.md
+- implement the tree and the interactive format

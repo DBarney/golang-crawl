@@ -30,7 +30,6 @@ func main() {
 		process.FetchUrl,
 		process.ParseHTML,
 		process.CompileNodeInfo,
-		results.AddPage,
 		process.FilterLinks,
 	}
 
