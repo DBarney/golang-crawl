@@ -5,10 +5,12 @@ import (
 )
 
 type (
+	//Pipeline stuff
 	Pipeline interface {
 		Err() <-chan error
 		Output() <-chan interface{}
 	}
+	//Handler stuff
 	Handler  func(interface{}) (interface{}, error)
 	pipeline struct {
 		source <-chan interface{}
@@ -19,6 +21,7 @@ type (
 	}
 )
 
+//NewPipeline stuff?
 func NewPipeline(source <-chan interface{}, workerCount int, handles ...Handler) Pipeline {
 	var pipe Pipeline
 	err := make(chan error)
