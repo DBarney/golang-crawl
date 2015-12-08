@@ -3,12 +3,13 @@ package main
 import (
 	// "flag"
 	"fmt"
-	"github.com/DBarney/golang-crawl/output"
-	"github.com/DBarney/golang-crawl/pipeline"
-	"github.com/DBarney/golang-crawl/process"
 	"net/url"
 	"os"
 	"os/signal"
+
+	"github.com/DBarney/golang-crawl/output"
+	"github.com/DBarney/golang-crawl/pipeline"
+	"github.com/DBarney/golang-crawl/process"
 )
 
 func init() {
